@@ -1,0 +1,35 @@
+--- Instruction types
+Note: Path must always be absolute (ig: client memory state must be memoryless)
+
+
+-- CREATE
+syntax:
+- CREATE DIR <PATH> <NAME>
+- CREATE FILE <PATH> <NAME>
+
+
+-- READ (valid only for Files)
+syntax:
+- READ FILE <PATH> <NAME>
+
+
+-- TREE (valid only for Directories)
+syntax:
+- TREE DIR <PATH>
+
+
+-- WRITE (valid only for files)
+syntax:
+- WRITE FILE <PATH> <DATA> <MODES>
+
+
+-- COPY
+syntax:
+- COPY FILE <SRCPATH> <DESTPATH>
+- COPY DIR <SRCPATH> <DESTPATH>
+
+
+-- CHANGE SERVER
+syntax:
+-- idk
+(didnt think of how to implement this yet.)
