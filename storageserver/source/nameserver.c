@@ -24,7 +24,6 @@ void *nm_sm_handler(void *arg)
     char sender = initial_message.sender;
     if (sender == 'C')
     {
-        printf("DEBUG-9\n");
         handle_client(nm_socket, &initial_message);
         printf("CLIENT SE AAYA HEIN\n");
     }

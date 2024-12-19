@@ -1,6 +1,7 @@
 main:
-	gcc main.c ./source/*.c ./protocols/*.c -g -o output
+	gcc main.c ./source/*.c ./protocols/*.c -g -o nameserver
 
 clean:
-	rm output
-	rm trie_state.conf
+	rm -f nameserver
+	rm -f trie_state.conf
+	rm -f nfs_operations.log

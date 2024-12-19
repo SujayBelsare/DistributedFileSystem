@@ -91,14 +91,14 @@ void handle_server(int client_socket, Message *initial_message)
         }
 
         requestBuffer->receivedPackets++;
-        printf("DEBUG-1\n");
+        
         // If all packets have been received, process the complete request
         if (requestBuffer->receivedPackets >= requestBuffer->expectedTotal)
         {
-            printf("DEBUG-2\n");
+            
             // Process the complete request
             process_server_request(requestBuffer->data, requestBuffer->size, message.sender, &address, client_socket);
-            printf("DEBUG-3\n");
+            
             // Reset the buffer for the next request
             reset_request_buffer(requestBuffer);
         }
@@ -139,12 +139,12 @@ void process_server_request(char *data, size_t size, char sender, struct sockadd
     char *ip_val = __strtok_r(data, " \n,", &token);
     char *port_val = __strtok_r(NULL, " \n,", &token);
     char *files_val = __strtok_r(NULL, " \n,", &token);
-    printf("DEBUG-40\n");
+    
     struct sockaddr_in* server_addr = malloc(sizeof(struct sockaddr_in));
     memset(server_addr, 0, sizeof(struct sockaddr_in));
     server_addr->sin_family = AF_INET;
     server_addr->sin_port = htons(atoi(port_val));
-    printf("DEBUG-41\n");
+    
     if (inet_pton(AF_INET, ip_val, &server_addr->sin_addr) <= 0) {
         perror("Invalid Addr / Addr not supported");
         log_system_event("Error", "Invalid Addr / Addr not supported");
@@ -155,10 +155,10 @@ void process_server_request(char *data, size_t size, char sender, struct sockadd
     new->address = *server_addr;
     new->address.sin_addr = address->sin_addr;
     new->socket = client_socket;
-    printf("DEBUG-30\n");
+    
     new->filecount = atoi(files_val);
     pthread_mutex_lock(&serverArrayMutex);
-    printf("DEBUG-31\n");
+    
     new->server_id = server_num;
     serverArray[server_num] = *new;
     server_num++;
@@ -169,14 +169,14 @@ void process_server_request(char *data, size_t size, char sender, struct sockadd
     insert(mainHeap, new);
     
     pthread_mutex_unlock(&serverArrayMutex);
-    printf("DEBUG-32\n");
+    
     Message response;
     memset(&response, 0, sizeof(Message));
     response.sender = 'N';
     response.packetNo = 1;
     response.totalPackets = 1;
     snprintf(response.data, sizeof(response.data), "OK");
-    printf("DEBUG-33\n");
+    
     response.datasize = strlen(response.data);
     send(client_socket, &response, sizeof(Message), 0);
     return;

@@ -12,9 +12,10 @@ Connection *serverArray;
 Node *LRU_CACHE[HASHMAP_SIZE];
 
 pthread_mutex_t trie_mutex = PTHREAD_MUTEX_INITIALIZER;
+FILE* log_file;
+
 int main()
 {
-    FILE* log_file;
     init_logging(log_file);
     serverArray = malloc(MAX_SIZE * sizeof(Connection));
     memset(serverArray, 0, sizeof(serverArray));

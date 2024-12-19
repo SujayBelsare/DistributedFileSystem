@@ -337,9 +337,9 @@ static bool parse_server_response(const char *response, ServerInfo *server)
 
 int main(void)
 {
-    const char nm_ip[] = "10.2.139.65";
+    const char nm_ip[] = "0.0.0.0";
     const int nm_port = 34000;
-    ServerInfo naming_server = {.ip = "10.2.139.65", .port = 34000};
+    ServerInfo naming_server = {.ip = "0.0.0.0", .port = 34000};
     char command[DATA_SIZE * 512];
     ServerInfo storage_server;
 
@@ -375,7 +375,7 @@ int main(void)
 
         if (!valid_command)
         {
-            printf("ERROR_400: INVALID COMMAND\n");
+            printf("ERROR: INVALID COMMAND\n");
             continue; // Redirect to the `while` loop for re-input
         }
 
@@ -437,17 +437,13 @@ int main(void)
             // the current format is WRITE FILE <file_path> <file_name> <write_kind> <content>
             sscanf(command, "%s %s %s %s %d %[^\n]s", temp1, temp2, temp3, temp4, &write_kind, content);
             // printf("content:%s\n", content);
-            printf("DEBUG-0\n");
             size_t content_len = strlen(content);
-            printf("DEBUG-0.5\n");
             size_t total_chunks = (content_len + 2000 - 1) / 2000;
             size_t bytes_sent = 0;
 
             char content_to_be_sent[2048];
             strncpy(content_to_be_sent, content + bytes_sent, 2000);
-            printf("DEBUG-1\n");
             processWriteResponse(&response, content_to_be_sent, write_kind);
-            printf("DEBUG-2\n");
             int chunks = 1;
             bytes_sent += strlen(content_to_be_sent);
             while (chunks < total_chunks)

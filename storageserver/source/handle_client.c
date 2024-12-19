@@ -6,7 +6,7 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
 
 void handle_client(int client_socket, Message *initial_message)
 {
-    printf("DEBUG-10\n");
+    
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
 
@@ -94,7 +94,7 @@ void handle_client(int client_socket, Message *initial_message)
         if (requestBuffer->receivedPackets >= requestBuffer->expectedTotal)
         {
             // Process the complete request
-            printf("DEBUG-11\n");
+            
             process_client_request(requestBuffer->data, requestBuffer->size, message.sender, &address, client_socket);
             // Reset the buffer for the next request
             reset_request_buffer(requestBuffer);
@@ -171,6 +171,6 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
     snprintf(response.data, sizeof(response.data), "OK");
     response.datasize = strlen(response.data);
 
-    // DEBUG
+    
     // send(client_socket, &response, sizeof(Message), 0);
 }

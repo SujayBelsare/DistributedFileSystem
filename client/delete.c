@@ -13,7 +13,6 @@ bool get_messages_delete(const char *ip, int port, Message *response)
 {
     int sock = connect_to_server(ip, port);
     bool success = false;
-    printf("DEBUG-DEL1\n");
 
     Message sending;
     strcpy(sending.data, "hello, its me!");
@@ -34,7 +33,6 @@ bool get_messages_delete(const char *ip, int port, Message *response)
         goto cleanup;
     }
     success = true;
-    printf("DEBUG-DEL2: %s\n", response->data);
 cleanup:
     close(sock);
     return success;
@@ -106,7 +104,6 @@ int processDeleteResponse(Message *response, const char *nmIP, int nmPort)
         printf("Response from the server: %s\n", response->data);
         if (strstr(response->data, "STOP"))
         {
-            printf("DEBUG-DEL\n");
             containsStop = 1;
             // int sock = connect_to_server(nmIP, nmPort);
             // Message inform;

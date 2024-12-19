@@ -1,12 +1,13 @@
 #ifndef _BOOKKEEPING_H_
 #define _BOOKKEEPING_H_
 
-#include "main.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define LOG_FILE "nfs_operations.log"
 #define MAX_LOG_SIZE 2048
 
-FILE* log_file;
 
 void init_logging(FILE* log_file);
 void close_logging(FILE* log_file);

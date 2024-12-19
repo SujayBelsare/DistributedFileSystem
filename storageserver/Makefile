@@ -1,5 +1,5 @@
 storage:
-	gcc source/*.c  -o storage -lpthread
+	gcc source/*.c  -o storageserver -lpthread
 
 clean:
-	rm -f storage
+	rm -f storageserver

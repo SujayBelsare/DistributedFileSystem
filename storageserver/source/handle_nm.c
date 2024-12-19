@@ -1,5 +1,7 @@
 #include "../header.h"
 
+void process_nm_request(char *data, size_t size, char sender, struct sockaddr_in *address, int client_socket);
+
 RequestBuffer *init_request_buffer()
 {
     RequestBuffer *buffer = malloc(sizeof(RequestBuffer));
@@ -162,14 +164,8 @@ void handle_nm(int nm_socket, Message *initial_message)
         if (requestBuffer->receivedPackets >= requestBuffer->expectedTotal)
         {
             // Process the complete request
-            Message response;
-            response.sender = 'S';
-            response.packetNo = 1;
-            response.totalPackets = 1;
-            snprintf(response.data, sizeof(response.data), "I am alive\n");
-            response.datasize = strlen(response.data);
-            send(nm_socket, &response, sizeof(Message), 0);
-
+            process_nm_request(requestBuffer->data, requestBuffer->size, message.sender, &address, nm_socket);
+            
             // Reset the buffer for the next request
             reset_request_buffer(requestBuffer);
         }
@@ -196,4 +192,51 @@ void handle_nm(int nm_socket, Message *initial_message)
     }
     reset_request_buffer(requestBuffer);
     free(requestBuffer);
+}
+
+void process_nm_request(char *data, size_t size, char sender, struct sockaddr_in *address, int client_socket)
+{
+    // Print incoming request information
+    printf("Received request from nameserver %s:%d\n",
+           inet_ntoa(address->sin_addr),
+           ntohs(address->sin_port));
+    printf("Request data: %s\n", data);
+
+    // Initialize response structure
+    Message response;
+    memset(&response, 0, sizeof(Message));
+    response.sender = 'S';
+    response.packetNo = 1;
+    response.totalPackets = 1;
+
+    // Validate input data
+    if (data == NULL || size == 0)
+    {
+        snprintf(response.data, sizeof(response.data), "Invalid Command!");
+        response.datasize = strlen(response.data);
+        send(client_socket, &response, sizeof(Message), MSG_NOSIGNAL);
+        return;
+    }
+
+    // Process command using inputParser
+    nmParser(data, client_socket);
+
+    // Handle inputParser errors
+    // if (parse_result == -1) { // Example error case from inputParser
+    //     snprintf(response.data, sizeof(response.data), "ERR_100: File Not Found");
+    //     response.datasize = strlen(response.data);
+    //     send(client_socket, &response, sizeof(Message), MSG_NOSIGNAL);
+    //     return;
+    // } else if (parse_result == -2) {
+    //     snprintf(response.data, sizeof(response.data), "ERR_102: File Locked");
+    //     response.datasize = strlen(response.data);
+    //     send(client_socket, &response, sizeof(Message), MSG_NOSIGNAL);
+    //     return;
+    // }
+
+    // If the command is processed successfully
+    snprintf(response.data, sizeof(response.data), "OK");
+    response.datasize = strlen(response.data);
+
+    // send(client_socket, &response, sizeof(Message), 0);
 }

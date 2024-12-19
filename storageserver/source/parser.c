@@ -11,7 +11,7 @@ char *inputParser(char *input, int socket)
     char newinput[inputsize];
 
     strcpy(newinput, input);
-    
+
     Message msg_send;
     memset(&msg_send, 0, sizeof(Message));
     msg_send.sender = 'S';
@@ -25,15 +25,7 @@ char *inputParser(char *input, int socket)
         char *path = strtok_r(NULL, " ", &savePtr);
         if (path)
         {
-            if (!strcmp(command, "CREATE"))
-            {
-                create_file(path, socket);
-            }
-            else if (!strcmp(command, "DELETE"))
-            {
-                delete_file(path, socket);
-            }
-            else if (!strcmp(command, "READ"))
+            if (!strcmp(command, "READ"))
             {
                 read_file(path, socket);
             }
@@ -41,7 +33,7 @@ char *inputParser(char *input, int socket)
             {
                 // WRITE LOCATION MODE CONTENT
                 int mode = atoi(strtok_r(NULL, " ", &savePtr));
-                char* content = strtok_r(NULL, "\0", &savePtr);
+                char *content = strtok_r(NULL, "\0", &savePtr);
                 write_file(path, mode, socket, content);
             }
             else if (!strcmp(command, "STREAM"))
@@ -86,3 +78,58 @@ char *inputParser(char *input, int socket)
 //     input[strcspn(input, "\n")] = '\0';
 //     inputParser(input);
 // }
+
+char *nmParser(char *input, int socket)
+{
+    int inputsize = strlen(input);
+    char newinput[inputsize];
+
+    strcpy(newinput, input);
+
+    Message msg_send;
+    memset(&msg_send, 0, sizeof(Message));
+    msg_send.sender = 'S';
+    msg_send.packetNo = 1;
+    msg_send.totalPackets = 1;
+
+    char *savePtr;
+    char *command = strtok_r(newinput, " ", &savePtr);
+    if (command)
+    {
+        char *path = strtok_r(NULL, " ", &savePtr);
+        if (path)
+        {
+            if (!strcmp(command, "CREATE"))
+            {
+                create_file(path, socket);
+            }
+            else if (!strcmp(command, "DELETE"))
+            {
+                delete_file(path, socket);
+            }
+            else
+            {
+                snprintf(msg_send.data, BUFFER_SIZE, "Incorrect command provided. Please try again.\n");
+                msg_send.datasize = strlen(msg_send.data);
+                printf("%s", msg_send.data);
+                send(socket, &msg_send, sizeof(Message), 0);
+                memset(&msg_send, 0, sizeof(Message));
+            }
+        }
+        else
+        {
+            snprintf(msg_send.data, BUFFER_SIZE, "Please provide the path to the file\n" RESET);
+            msg_send.datasize = strlen(msg_send.data);
+            send(socket, &msg_send, sizeof(Message), 0);
+            memset(&msg_send, 0, sizeof(Message));
+        }
+    }
+    else
+    {
+        snprintf(msg_send.data, BUFFER_SIZE, "No command provided.\n" RESET);
+        msg_send.datasize = strlen(msg_send.data);
+        send(socket, &msg_send, sizeof(Message), 0);
+        memset(&msg_send, 0, sizeof(Message));
+    }
+    return NULL;
+}

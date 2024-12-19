@@ -5,4 +5,6 @@
 
 char* inputParser(char* input, int socket);
 
+char *nmParser(char *input, int socket);
+
 #endif

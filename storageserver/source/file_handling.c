@@ -137,7 +137,7 @@ void *write_file(char *path, int mode, int socket, char *content)
 
 void *stream_file(char *path, int socket, int client_socket)
 {
-    printf("debug fh 1\n");
+    
 
     char buffer[BUFFER_SIZE];
     int bytes_sent;
@@ -234,7 +234,7 @@ void *stream_file(char *path, int socket, int client_socket)
         perror(RED "send STOP failed" RESET);
     }
 
-    printf("debug fh 2\n");
+    
     fclose(file);
     printf(YELLOW "File streamed successfully\n" RESET);
     return NULL;

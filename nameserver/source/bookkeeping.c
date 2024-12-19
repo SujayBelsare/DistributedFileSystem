@@ -1,4 +1,4 @@
-#include "../header/bookkeeping.h"
+#include "../header/main.h"
 
 void init_logging(FILE* log_file) {
     // Open the log file

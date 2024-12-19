@@ -30,4 +30,6 @@
 #define CACHE_SIZE 25
 #define HASHMAP_SIZE 98317
 
+
+char* exchangeMessage(const char *ip, int port, Message *request);
 #endif
