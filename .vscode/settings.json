@@ -4,6 +4,8 @@
         "delete.h": "c",
         "main.h": "c",
         "message.h": "c",
-        "identifiers.h": "c"
+        "identifiers.h": "c",
+        "connections.h": "c",
+        "bookkeeping.h": "c"
     }
 }

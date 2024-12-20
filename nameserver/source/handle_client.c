@@ -522,7 +522,7 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
             }
             pthread_mutex_unlock(&shared_data_mutex);
 
-            delete_file(child, client_socket);
+            delete_file(child, client_socket, 1);
             pthread_mutex_lock(&shared_data_mutex);
             child->metadata->isDeleted = 1;
             pthread_mutex_unlock(&shared_data_mutex);
@@ -536,6 +536,13 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
             {
                 printf("Invalid path\n");
                 log_system_event("Error", "Invalid path");
+                Message response;
+                response.sender = 'N';
+                response.packetNo = 1;
+                response.totalPackets = 1;
+                snprintf(response.data, sizeof(response.data), "ERROR: INVALID PATH");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
                 return;
             }
             char *name = __strtok_r(NULL, " \n", &token);
@@ -543,17 +550,54 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
             {
                 printf("Invalid name\n");
                 log_system_event("Error", "Invalid name");
+                Message response;
+                response.sender = 'N';
+                response.packetNo = 1;
+                response.totalPackets = 1;
+                snprintf(response.data, sizeof(response.data), "ERROR: INVALID DIRECTORY NAME");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
                 return;
             }
             Node *child = navigateTo(node, name);
+            if (child == NULL)
+            {
+                printf("Directory not found\n");
+                log_system_event("Error", "Directory not found");
+                Message response;
+                response.sender = 'N';
+                response.packetNo = 1;
+                response.totalPackets = 1;
+                snprintf(response.data, sizeof(response.data), "ERROR: DIRECTORY NOT FOUND");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
+                return;
+            }
+            if (child->metadata->isFile == 1)
+            {
+                printf("Cannot delete a file\n");
+                log_system_event("Error", "Cannot delete a file");
+                Message response;
+                response.sender = 'N';
+                response.packetNo = 1;
+                response.totalPackets = 1;
+                snprintf(response.data, sizeof(response.data), "ERROR: CANNOT DELETE A FILE");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
+                return;
+            }
+            printf("DEBUG-DELETE-1\n");
             deleteTree(child, client_socket);
             Message response;
             response.sender = 'N';
             response.packetNo = 1;
             response.totalPackets = 1;
-            strcpy(response.data, "STOP");
+            strcpy(response.data, "DIRECTORY DELETED SUCCESSFULLY");
             response.datasize = strlen(response.data);
+            printf("DEBUG-DELETE-2\n");
+
             send(client_socket, &response, sizeof(Message), 0);
+            printf("DEBUG-DELETE-3\n");
         }
     }
     else if (strcmp(tok1, "WRITE") == 0)

@@ -177,7 +177,7 @@ void deleteTree(Node *node, int client_socket)
     node->metadata->isDeleted = 1;
     if (node->metadata->isFile)
     {
-        delete_file(node, client_socket);
+        delete_file(node, client_socket, 2);
     }
 }
 

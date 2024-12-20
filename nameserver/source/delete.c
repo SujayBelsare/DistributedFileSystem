@@ -1,5 +1,5 @@
 #include "../header/main.h"
-void delete_file(Node *child, int client_socket)
+void delete_file(Node *child, int client_socket, int flag)
 {
 
     pthread_mutex_lock(&shared_data_mutex);
@@ -66,6 +66,10 @@ void delete_file(Node *child, int client_socket)
         exchangeMessage(inet_ntoa(backup2->address.sin_addr), ntohs(backup2->address.sin_port), &backreq2);
     }
 
+    if (flag == 2) // message is not to be sent back to client
+    {
+        return;
+    }
     Message response;
     response.sender = 'N';
     response.packetNo = 1;
