@@ -14,8 +14,6 @@
 
 #include "client.h"
 
-extern int connect_to_server(const char *ip, int port);
-int processDeleteResponse(Message *response, const char* nmIP, int nmPort);
-extern bool exchange_messages(const char *ip, int port, Message *request, Message *response);
+int processDeleteResponse(Message *response);
 
 #endif

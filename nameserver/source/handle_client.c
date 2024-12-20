@@ -8,61 +8,6 @@ extern Connection *serverArray;
 extern FILE *log_file;
 
 pthread_mutex_t shared_data_mutex = PTHREAD_MUTEX_INITIALIZER;
-void delete_file(Node *child, int client_socket)
-{
-
-    pthread_mutex_lock(&shared_data_mutex);
-    Connection *main = fileArray[child->metadata->number].main;
-    Connection *backup1 = fileArray[child->metadata->number].backup1;
-    Connection *backup2 = fileArray[child->metadata->number].backup2;
-    char *main_ip = "No server is defined\n";
-    int main_port = 0;
-    if (main == NULL && backup1 == NULL && backup2 == NULL)
-    {
-        printf("No server defined.\n");
-        log_system_event("Error", "No server defined");
-        return;
-    }
-    else if (main != NULL)
-    {
-        main->filecount++;
-        fileArray[child->metadata->number].main = main;
-
-        main_ip = inet_ntoa(main->address.sin_addr);
-        main_port = ntohs(main->address.sin_port);
-    }
-    if (backup1 != NULL && backup2 != NULL)
-    {
-        backup1->filecount++;
-        backup2->filecount++;
-
-        fileArray[child->metadata->number].backup1 = backup1;
-        fileArray[child->metadata->number].backup2 = backup2;
-    }
-    pthread_mutex_unlock(&shared_data_mutex);
-    Message response;
-    response.sender = 'N';
-    response.packetNo = 1;
-    response.totalPackets = 1;
-    if (backup1 == NULL || backup2 == NULL)
-    {
-        // send only main server IP and port
-        snprintf(response.data, sizeof(response.data), "1%s %d %d", main_ip, main_port, child->metadata->number);
-        log_system_event("Info", "1 server defined");
-    }
-    else
-    {
-        snprintf(response.data, sizeof(response.data), "2%s %d %d %s %d %d %s %d %d",
-                 main_ip, main_port, child->metadata->number,
-                 inet_ntoa(backup1->address.sin_addr), ntohs(backup1->address.sin_port), child->metadata->number,
-                 inet_ntoa(backup2->address.sin_addr), ntohs(backup2->address.sin_port), child->metadata->number);
-        log_system_event("Info", "2 servers defined");
-    }
-    // send the file number of the deleted file back to client so that it can be sent to ss to delete permanently
-    // snprintf(response.data, sizeof(response.data), "%d", child->metadata->number);
-    response.datasize = strlen(response.data);
-    send(client_socket, &response, sizeof(Message), 0);
-}
 
 void handle_client(int client_socket, Message *initial_message)
 {
@@ -508,6 +453,13 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
             {
                 printf("Invalid path\n");
                 log_system_event("Error", "Invalid path");
+                Message response;
+                response.sender = 'N';
+                response.packetNo = 1;
+                response.totalPackets = 1;
+                snprintf(response.data, sizeof(response.data), "ERROR: INVALID PATH");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
                 return;
             }
             char *name = __strtok_r(NULL, " \n", &token);
@@ -515,11 +467,65 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
             {
                 printf("Invalid name\n");
                 log_system_event("Error", "Invalid name");
+                Message response;
+                response.sender = 'N';
+                response.packetNo = 1;
+                response.totalPackets = 1;
+                snprintf(response.data, sizeof(response.data), "ERROR: INVALID FILENAME");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
                 return;
             }
             Node *child = navigateTo(node, name);
-            child->metadata->isDeleted = 1;
+            if (child == NULL)
+            {
+                printf("File not found\n");
+                log_system_event("Error", "File not found");
+                Message response;
+                response.sender = 'N';
+                response.packetNo = 1;
+                response.totalPackets = 1;
+                snprintf(response.data, sizeof(response.data), "ERROR: FILE NOT FOUND");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
+                return;
+            }
+
+            if (child->metadata->isFile == 0)
+            {
+                printf("Cannot delete a directory\n");
+                log_system_event("Error", "Cannot delete a directory");
+                Message response;
+                response.sender = 'N';
+                response.packetNo = 1;
+                response.totalPackets = 1;
+                snprintf(response.data, sizeof(response.data), "ERROR: CANNOT DELETE A DIRECTORY");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
+                return;
+            }
+
+            pthread_mutex_lock(&shared_data_mutex);
+            if (child->metadata->isDeleted == 1)
+            {
+                pthread_mutex_unlock(&shared_data_mutex);
+                printf("File already deleted\n");
+                log_system_event("Error", "File already deleted");
+                Message response;
+                response.sender = 'N';
+                response.packetNo = 1;
+                response.totalPackets = 1;
+                snprintf(response.data, sizeof(response.data), "ERROR: FILE ALREADY DELETED");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
+                return;
+            }
+            pthread_mutex_unlock(&shared_data_mutex);
+
             delete_file(child, client_socket);
+            pthread_mutex_lock(&shared_data_mutex);
+            child->metadata->isDeleted = 1;
+            pthread_mutex_unlock(&shared_data_mutex);
         }
         else if (strcmp(tok2, "DIR") == 0)
         {

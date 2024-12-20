@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.cpp": "cpp",
+        "delete.h": "c",
+        "main.h": "c",
+        "message.h": "c",
+        "identifiers.h": "c"
+    }
+}

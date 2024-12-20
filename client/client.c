@@ -455,7 +455,7 @@ int main(void)
             break;
             // processReadResponse(&response);
         case CMD_DELETE:
-            processDeleteResponse(&response, nm_ip, nm_port);
+            processDeleteResponse(&response);
             break;
         case CMD_COPY:
             // processCopyResponse(&response);
