@@ -40,7 +40,7 @@ char *inputParser(char *input, int socket)
             {
                 stream_file(path, socket); // Call the new function for STREAM
             }
-            else if (!strcmp(command, "SNP"))
+            else if (!strcmp(command, "DETAILS"))
             {
                 get_data(path, socket);
                 // printf("Get - Command: %s, path: %s\n", command, path);

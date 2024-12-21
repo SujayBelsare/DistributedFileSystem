@@ -291,7 +291,6 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
                 exchangeMessage(inet_ntoa(backup2->address.sin_addr), ntohs(backup2->address.sin_port), &backreq2);
             }
 
-            printf("DEBUG-3\n");
             Message response;
             response.sender = 'N';
             response.packetNo = 1;
@@ -586,7 +585,6 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
                 send(client_socket, &response, sizeof(Message), 0);
                 return;
             }
-            printf("DEBUG-DELETE-1\n");
             deleteTree(child, client_socket);
             Message response;
             response.sender = 'N';
@@ -594,10 +592,8 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
             response.totalPackets = 1;
             strcpy(response.data, "DIRECTORY DELETED SUCCESSFULLY");
             response.datasize = strlen(response.data);
-            printf("DEBUG-DELETE-2\n");
 
             send(client_socket, &response, sizeof(Message), 0);
-            printf("DEBUG-DELETE-3\n");
         }
     }
     else if (strcmp(tok1, "WRITE") == 0)
@@ -678,9 +674,92 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
             }
         }
     }
-    printTree(root, 10, NULL);
+    else if (strcmp(tok1, "DETAILS") == 0)
+    {
 
-    //
-    // // Access or modify shared resources
-    //
+        Node *node = getNodeFromPath(root, tok2);
+
+        if (node == NULL || node->metadata->isFile == 0 || node->metadata->isDeleted == 1)
+        {
+            printf("Invalid path\n");
+            log_system_event("Error", "Invalid path");
+            Message response;
+            response.sender = 'N';
+            response.packetNo = 1;
+            response.totalPackets = 1;
+            snprintf(response.data, sizeof(response.data), "THE GIVEN PATH IS EITHER INVALID OR IS A FOLDER.");
+            response.datasize = strlen(response.data);
+            send(client_socket, &response, sizeof(Message), 0);
+
+            return;
+        }
+
+        if (node->metadata->isFile == 1)
+        {
+            pthread_mutex_lock(&shared_data_mutex);
+            Connection *main = fileArray[node->metadata->number].main;
+            Connection *backup1 = fileArray[node->metadata->number].backup1;
+            Connection *backup2 = fileArray[node->metadata->number].backup2;
+            char *main_ip = NULL;
+            int main_port = 0;
+            if (main == NULL && backup1 == NULL && backup2 == NULL)
+            {
+                printf("No server defined.\n");
+                log_system_event("Error", "No server defined");
+                pthread_mutex_unlock(&shared_data_mutex);
+                Message response;
+                response.sender = 'N';
+                response.packetNo = 1;
+                response.totalPackets = 1;
+                snprintf(response.data, sizeof(response.data), "NO SERVER DEFINED.");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
+                return;
+            }
+            else if (main != NULL)
+            {
+                main->filecount++;
+                fileArray[node->metadata->number].main = main;
+
+                main_ip = inet_ntoa(main->address.sin_addr);
+                main_port = ntohs(main->address.sin_port);
+            }
+            if (backup1 != NULL && backup2 != NULL)
+            {
+                backup1->filecount++;
+                backup2->filecount++;
+
+                fileArray[node->metadata->number].backup1 = backup1;
+                fileArray[node->metadata->number].backup2 = backup2;
+            }
+            pthread_mutex_unlock(&shared_data_mutex);
+
+            printf("DEBUG-DETAILS-4\n");
+
+            Message response;
+            response.sender = 'N';
+            response.packetNo = 1;
+            response.totalPackets = 1;
+            if (backup1 == NULL || backup2 == NULL)
+            {
+                printf("DEBUG-HERE-1\n");
+                // send only main server IP and port
+                snprintf(response.data, sizeof(response.data), "1%s %d %d", main_ip, main_port, node->metadata->number);
+                printf("DEBUG-HERE-2\n");
+            }
+            else
+            {
+                snprintf(response.data, sizeof(response.data), "2%s %d %d %s %d %d %s %d %d",
+                         main_ip, main_port, node->metadata->number,
+                         inet_ntoa(backup1->address.sin_addr), ntohs(backup1->address.sin_port), node->metadata->number,
+                         inet_ntoa(backup2->address.sin_addr), ntohs(backup2->address.sin_port), node->metadata->number);
+                log_server_response(log_file, inet_ntoa(address->sin_addr), inet_ntoa(main->address.sin_addr), "DETAILS", "SUCCESS");
+            }
+            response.datasize = strlen(response.data);
+            printf("DEBUG-DETAILS-4.5\n");
+            send(client_socket, &response, sizeof(Message), 0);
+            printf("DEBUG-DETAILS-5\n");
+        }
+    }
+    printTree(root, 10, NULL);
 }

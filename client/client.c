@@ -22,7 +22,7 @@ typedef enum
     CMD_DELETE,
     CMD_COPY,
     CMD_WRITE_STATUS,
-    CMD_GET_DATA,
+    CMD_DETAILS,
     CMD_UNKNOWN,
     CMD_LIST
 } CommandType;
@@ -95,7 +95,6 @@ bool exchange_messages(const char *ip, int port, Message *request, Message *resp
 {
     int sock = connect_to_server(ip, port);
     bool success = false;
-    printf("SENDING: %s\n", request->data);
     if (send(sock, request, sizeof(Message), MSG_NOSIGNAL) < 0)
     {
         handle_error("Send failed", false);
@@ -107,7 +106,6 @@ bool exchange_messages(const char *ip, int port, Message *request, Message *resp
         handle_error("Receive failed", false);
         goto cleanup;
     }
-    printf("RECEIVED: %s\n", response->data);
     if (strncmp(response->data, "DATA", 4) == 0)
     {
         printf("READ from file:%s\n", response->data + 4);
@@ -315,7 +313,7 @@ static CommandType parse_command(const char *command)
         {"DELETE", CMD_DELETE},
         {"COPY", CMD_COPY},
         {"WRITE", CMD_WRITE_STATUS},
-        {"SNP", CMD_GET_DATA},
+        {"DETAILS", CMD_DETAILS},
         {"LIST", CMD_LIST},
 
     }; // get file metadata
@@ -371,7 +369,8 @@ int main(void)
                              strncmp(command, "WRITE", 5) == 0 ||
                              strncmp(command, "DELETE", 6) == 0 ||
                              strncmp(command, "LIST", 4) == 0 ||
-                             strncmp(command, "COPY", 4) == 0);
+                             strncmp(command, "COPY", 4) == 0 ||
+                             strncmp(command, "DETAILS", 7) == 0);
 
         if (!valid_command)
         {
@@ -394,10 +393,10 @@ int main(void)
         }
 
         // Check for specific error codes in the response
-        if (strncmp(response.data, "1001:", 5) == 0 ||  // Directory inside file
-            strncmp(response.data, "1002:", 5) == 0 ||  // Invalid path
-            strncmp(response.data, "1004:", 5) == 0 ||  // Resource already exists
-            strncmp(response.data, "ERROR:", 6) == 0)   // Generic error
+        if (strncmp(response.data, "1001:", 5) == 0 || // Directory inside file
+            strncmp(response.data, "1002:", 5) == 0 || // Invalid path
+            strncmp(response.data, "1004:", 5) == 0 || // Resource already exists
+            strncmp(response.data, "ERROR:", 6) == 0)  // Generic error
         {
             printf("Server Error: %s\n", response.data);
             continue; // Redirect to the `while` loop for re-input
@@ -459,9 +458,9 @@ int main(void)
             break;
         case CMD_COPY:
             // processCopyResponse(&response);
-        case CMD_GET_DATA:
-            // syntax: SNP <file_path>
-            //  processGetResponse(&response);
+        case CMD_DETAILS:
+            // syntax: DETAILS <file_path>
+            processGetResponse(&response);
             break;
         default:
             handle_error("Unsupported command", true);
@@ -470,4 +469,3 @@ int main(void)
     pthread_mutex_destroy(&write_status_mutex);
     return EXIT_SUCCESS;
 }
-

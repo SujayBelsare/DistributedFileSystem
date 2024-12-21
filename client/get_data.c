@@ -1,6 +1,6 @@
 #include "get_data.h"
 
-int processGetResponse(Message* response)
+int processGetResponse(Message *response)
 {
     int fileNo;
     char swtch;
@@ -30,15 +30,15 @@ int processGetResponse(Message* response)
                backupIP1, &backupPort1, &fileNo,
                backupIP2, &backupPort2, &fileNo);
     }
-    else if (swtch == '3') // error handling
+    else // error handling
     {
-        printf("Response from the server: %s\n", response->data + 1);
+        printf("%s\n", response->data);
         return -1;
     }
 
-    request1.datasize = snprintf(request1.data, DATA_SIZE, "SNP %d", fileNo);
-    request2.datasize = snprintf(request2.data, DATA_SIZE, "SNP %d", fileNo);
-    request3.datasize = snprintf(request3.data, DATA_SIZE, "SNP %d", fileNo);
+    request1.datasize = snprintf(request1.data, DATA_SIZE, "DETAILS %d", fileNo);
+    request2.datasize = snprintf(request2.data, DATA_SIZE, "DETAILS %d", fileNo);
+    request3.datasize = snprintf(request3.data, DATA_SIZE, "DETAILS %d", fileNo);
 
     request1.packetNo = 1;
     request1.totalPackets = 1;
@@ -55,9 +55,11 @@ int processGetResponse(Message* response)
     Message response1;
     Message response2;
     Message response3;
-    
+
     exchange_messages(mainIP, mainPort, &request1, &response1);
-    if(swtch == '1') return 0;
+    printf("%s\n", response1.data);
+    if (swtch == '1')
+        return 0;
     exchange_messages(backupIP1, backupPort1, &request2, &response2);
 
 }

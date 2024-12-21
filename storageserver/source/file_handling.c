@@ -103,7 +103,7 @@ void *write_file(char *path, int mode, int socket, char *content)
     // int total_packets = (content_length + 256 - 1) / 256;
     // int packetNo = 1;
 
-    for(int i = 0; i < content_length; i += 256)
+    for (int i = 0; i < content_length; i += 256)
     {
         int chunk_size = content_length - i < 256 ? content_length - i : 256;
         strncpy(msg_send.data, content + i, 256);
@@ -137,7 +137,6 @@ void *write_file(char *path, int mode, int socket, char *content)
 
 void *stream_file(char *path, int socket, int client_socket)
 {
-    
 
     char buffer[BUFFER_SIZE];
     int bytes_sent;
@@ -234,35 +233,9 @@ void *stream_file(char *path, int socket, int client_socket)
         perror(RED "send STOP failed" RESET);
     }
 
-    
     fclose(file);
     printf(YELLOW "File streamed successfully\n" RESET);
     return NULL;
-}
-
-
-void permissions(mode_t mode, int socket, int *packetNo, int totalPackets)
-{
-    Message msg;
-    memset(&msg, 0, sizeof(Message));
-    msg.sender = 'S';
-    msg.packetNo = *packetNo;
-    msg.totalPackets = totalPackets;
-
-    snprintf(msg.data, BUFFER_SIZE, "Permissions: %c%c%c%c%c%c%c%c%c\n",
-             (mode & S_IRUSR) ? 'r' : '-',
-             (mode & S_IWUSR) ? 'w' : '-',
-             (mode & S_IXUSR) ? 'x' : '-',
-             (mode & S_IRGRP) ? 'r' : '-',
-             (mode & S_IWGRP) ? 'w' : '-',
-             (mode & S_IXGRP) ? 'x' : '-',
-             (mode & S_IROTH) ? 'r' : '-',
-             (mode & S_IWOTH) ? 'w' : '-',
-             (mode & S_IXOTH) ? 'x' : '-');
-    msg.datasize = strlen(msg.data);
-    printf("%s", msg.data);
-    send(socket, &msg, sizeof(Message), 0);
-    (*packetNo)++;
 }
 
 void *get_data(char *path, int socket)
@@ -288,90 +261,75 @@ void *get_data(char *path, int socket)
     int packetNo = 1;
     int totalPackets = 8;
 
+    char temp[BUFFER_SIZE];
+
     snprintf(msg.data, BUFFER_SIZE, BLUE "File path: " RESET "%s\n", path);
-    msg.datasize = strlen(msg.data);
-    msg.packetNo = packetNo++;
-    msg.totalPackets = totalPackets;
-    printf("%s", msg.data);
-    send(socket, &msg, sizeof(Message), 0);
 
-    snprintf(msg.data, BUFFER_SIZE, BLUE "File size: " RESET "%lld bytes\n", (long long)file_stats.st_size);
-    msg.datasize = strlen(msg.data);
-    msg.packetNo = packetNo++;
-    msg.totalPackets = totalPackets;
-    printf("%s", msg.data);
-    send(socket, &msg, sizeof(Message), 0);
+    snprintf(temp, BUFFER_SIZE, BLUE "File size: " RESET "%lld bytes\n", (long long)file_stats.st_size);
+    strcat(msg.data, temp);
 
-    snprintf(msg.data, BUFFER_SIZE, BLUE "File type: " RESET);
-    msg.datasize = strlen(msg.data);
-    msg.packetNo = packetNo++;
-    msg.totalPackets = totalPackets;
-    printf("%s", msg.data);
-    send(socket, &msg, sizeof(Message), 0);
+    snprintf(temp, BUFFER_SIZE, BLUE "File type: " RESET);
+    strcat(msg.data, temp);
 
     if (S_ISREG(file_stats.st_mode))
     {
-        snprintf(msg.data, BUFFER_SIZE, "Regular file\n");
+        snprintf(temp, BUFFER_SIZE, "Regular file\n");
     }
     else if (S_ISDIR(file_stats.st_mode))
     {
-        snprintf(msg.data, BUFFER_SIZE, "Directory\n");
+        snprintf(temp, BUFFER_SIZE, "Directory\n");
     }
     else if (S_ISCHR(file_stats.st_mode))
     {
-        snprintf(msg.data, BUFFER_SIZE, "Character device\n");
+        snprintf(temp, BUFFER_SIZE, "Character device\n");
     }
     else if (S_ISBLK(file_stats.st_mode))
     {
-        snprintf(msg.data, BUFFER_SIZE, "Block device\n");
+        snprintf(temp, BUFFER_SIZE, "Block device\n");
     }
     else if (S_ISFIFO(file_stats.st_mode))
     {
-        snprintf(msg.data, BUFFER_SIZE, "FIFO/pipe\n");
+        snprintf(temp, BUFFER_SIZE, "FIFO/pipe\n");
     }
     else if (S_ISLNK(file_stats.st_mode))
     {
-        snprintf(msg.data, BUFFER_SIZE, "Symbolic link\n");
+        snprintf(temp, BUFFER_SIZE, "Symbolic link\n");
     }
     else if (S_ISSOCK(file_stats.st_mode))
     {
-        snprintf(msg.data, BUFFER_SIZE, "Socket\n");
+        snprintf(temp, BUFFER_SIZE, "Socket\n");
     }
     else
     {
-        snprintf(msg.data, BUFFER_SIZE, "Unknown\n");
+        snprintf(temp, BUFFER_SIZE, "Unknown\n");
     }
-    msg.datasize = strlen(msg.data);
-    msg.packetNo = packetNo++;
-    msg.totalPackets = totalPackets;
-    printf("%s", msg.data);
-    send(socket, &msg, sizeof(Message), 0);
+    strcat(msg.data, temp);
 
-    permissions(file_stats.st_mode, socket, &packetNo, totalPackets);
+    snprintf(temp, BUFFER_SIZE, "Permissions: %c%c%c%c%c%c%c%c%c\n",
+             (file_stats.st_mode & S_IRUSR) ? 'r' : '-',
+             (file_stats.st_mode & S_IWUSR) ? 'w' : '-',
+             (file_stats.st_mode & S_IXUSR) ? 'x' : '-',
+             (file_stats.st_mode & S_IRGRP) ? 'r' : '-',
+             (file_stats.st_mode & S_IWGRP) ? 'w' : '-',
+             (file_stats.st_mode & S_IXGRP) ? 'x' : '-',
+             (file_stats.st_mode & S_IROTH) ? 'r' : '-',
+             (file_stats.st_mode & S_IWOTH) ? 'w' : '-',
+             (file_stats.st_mode & S_IXOTH) ? 'x' : '-');
+    strcat(msg.data, temp);
 
-    struct passwd* pw = getpwuid(file_stats.st_uid);
-    struct group* gr = getgrgid(file_stats.st_gid);
+    struct passwd *pw = getpwuid(file_stats.st_uid);
+    struct group *gr = getgrgid(file_stats.st_gid);
 
-    snprintf(msg.data, BUFFER_SIZE, MAGENTA "Owner:" RESET " %s\n", pw ? pw->pw_name : "Unknown");
-    msg.datasize = strlen(msg.data);
-    msg.packetNo = packetNo++;
-    msg.totalPackets = totalPackets;
-    printf("%s", msg.data);
-    send(socket, &msg, sizeof(Message), 0);
+    snprintf(temp, BUFFER_SIZE, MAGENTA "Owner:" RESET " %s\n", pw ? pw->pw_name : "Unknown");
+    strcat(msg.data, temp);
 
-    snprintf(msg.data, BUFFER_SIZE, MAGENTA "Group: " RESET " %s\n", gr ? gr->gr_name : "Unknown");
-    msg.datasize = strlen(msg.data);
-    msg.packetNo = packetNo++;
-    msg.totalPackets = totalPackets;
-    printf("%s", msg.data);
-    send(socket, &msg, sizeof(Message), 0);
+    snprintf(temp, BUFFER_SIZE, MAGENTA "Group: " RESET " %s\n", gr ? gr->gr_name : "Unknown");
+    strcat(msg.data, temp);
 
     // Last modification time
-    snprintf(msg.data, BUFFER_SIZE, WHITE "Last modified: " RESET "%s", ctime(&file_stats.st_mtime));
-    msg.datasize = strlen(msg.data);
-    msg.packetNo = packetNo++;
-    msg.totalPackets = totalPackets;
-    printf("%s", msg.data);
+    snprintf(temp, BUFFER_SIZE, WHITE "Last modified: " RESET "%s", ctime(&file_stats.st_mtime));
+    strcat(msg.data, temp);
+
     send(socket, &msg, sizeof(Message), 0);
 
     return NULL;

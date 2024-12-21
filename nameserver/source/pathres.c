@@ -46,6 +46,7 @@ pthread_mutex_t cache_mutex = PTHREAD_MUTEX_INITIALIZER;
 Node *getNodeFromPath(Node *root, char *path)
 {
     printf("%s\n",path);
+    printf("DEBUG-GNFP-1\n");
     int pathHash = getHash(path);
     printf("path hash:%d\n", pathHash);
     if((LRU_CACHE[pathHash] != NULL && LRU_CACHE[pathHash]->metadata->isDeleted == 0))
