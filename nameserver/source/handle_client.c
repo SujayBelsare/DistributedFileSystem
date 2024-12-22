@@ -392,28 +392,8 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
          syntax:
          - STREAM <path>
         */
-        if (tok2 == NULL)
-        {
-            printf("Invalid STREAM command: Path missing\n");
-            log_system_event("Error", "Invalid STREAM command: Path missing");
-            return;
-        }
 
-        // Check if the path exists in the Trie
-        Node *node = navigatePath(root, tok2);
-        if (node == NULL || node->metadata->isFile == 0)
-        {
-            printf("File not found or is not a valid file: %s\n", tok2);
-            log_system_event("Error", "File not found or is not a valid file");
-            Message response;
-            response.sender = 'N';
-            response.packetNo = 1;
-            response.totalPackets = 1;
-            snprintf(response.data, sizeof(response.data), "ERROR: File not found or invalid");
-            response.datasize = strlen(response.data);
-            send(client_socket, &response, sizeof(Message), 0);
-            return;
-        }
+        // path error handling done on storage server side
 
         // Fetch the main Storage Server handling the file
         pthread_mutex_lock(&shared_data_mutex);

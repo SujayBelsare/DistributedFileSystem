@@ -9,6 +9,8 @@
         "bookkeeping.h": "c",
         "client.h": "c",
         "clientheader.h": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "header.h": "c",
+        "stream.h": "c"
     }
 }

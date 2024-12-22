@@ -26,17 +26,17 @@
 #include "grp.h"
 #include "time.h"
 
-#define RESET   "\033[0m"
-#define BOLD    "\033[1m"
-#define LINE    "\033[4m"
-#define BLACK   "\033[30m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[33m"
-#define BLUE    "\033[34m"
+#define RESET "\033[0m"
+#define BOLD "\033[1m"
+#define LINE "\033[4m"
+#define BLACK "\033[30m"
+#define RED "\033[31m"
+#define GREEN "\033[32m"
+#define YELLOW "\033[33m"
+#define BLUE "\033[34m"
 #define MAGENTA "\033[35m"
-#define CYAN    "\033[36m"
-#define WHITE   "\033[37m"
+#define CYAN "\033[36m"
+#define WHITE "\033[37m"
 
 #define MAX_CLIENTS 1024
 #define MAX_FILE_SIZE 1024
@@ -44,6 +44,7 @@
 #define MAX_PATH 1024
 #define MAX_COMMAND 1024
 #define BUFFER_SIZE 2048
+#define DATA_SIZE 2048
 
 #include "headers/parser.h"
 #include "headers/file_handling.h"
@@ -51,6 +52,7 @@
 #include "headers/nameserver.h"
 #include "headers/handle_nm.h"
 #include "headers/handle_client.h"
+#include "headers/stream.h"
 
 // typedef struct Message
 // {

@@ -2,9 +2,6 @@
 #include "../header.h"
 #define BUFFER_SIZE 2048
 
-// Add this prototype for the new function
-void stream_file(char *path, int client_socket);
-
 char *inputParser(char *input, int socket)
 {
     int inputsize = strlen(input);

@@ -150,7 +150,7 @@ static void stream_music(const char *ss_ip, int ss_port, const char *path)
     ssize_t bytes_received = recv(sock, &response, sizeof(Message), 0);
     if (bytes_received <= 0 || response.totalPackets <= 0)
     {
-        perror("Failed to receive total packet count or invalid response");
+        printf("%s\n", response.data);
         close(sock);
         pclose(player);
         return;
