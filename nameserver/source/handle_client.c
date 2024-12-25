@@ -349,6 +349,13 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
         {
             printf("Invalid READ command: Path missing\n");
             log_system_event("Error", "Invalid READ command: Path missing");
+            Message response;
+            response.sender = 'N';
+            response.packetNo = 1;
+            response.totalPackets = 1;
+            snprintf(response.data, sizeof(response.data), "3Invalid READ Command: Path missing.");
+            response.datasize = strlen(response.data);
+            send(client_socket, &response, sizeof(Message), 0);
             return;
         }
 
@@ -380,7 +387,7 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
         response.sender = 'N';
         response.packetNo = 1;
         response.totalPackets = 1;
-        snprintf(response.data, sizeof(response.data), "%s %d", main_ip, main_port);
+        snprintf(response.data, sizeof(response.data), "%s %d %d", main_ip, main_port, node->metadata->number);
         response.datasize = strlen(response.data);
 
         send(client_socket, &response, sizeof(Message), 0);

@@ -48,32 +48,25 @@ void *read_file(char *path, int socket)
         return NULL;
     }
 
-    int file_size = statbuf.st_size;
-    int totalPackets = (file_size + 2000 - 1) / 2000;
+    snprintf(msg.data, BUFFER_SIZE, GREEN "FILE START:\n" RESET);
+    msg.datasize = strlen(msg.data);
+    msg.packetNo = 1;
+    msg.totalPackets = 1;
+    send(socket, &msg, sizeof(Message), 0);
 
-    int packetNo = 1;
     size_t bytes_read;
-    while ((bytes_read = fread(msg.data, 1, 2000, file)) > 0)
+    char buffer[2048] = {0};
+    while ((bytes_read = fread(buffer, 1, 2047, file)) > 0)
     {
-        char data[BUFFER_SIZE] = {0};
-        strcpy(data, "DATA ");
-        strcat(data, msg.data);
-        strcpy(msg.data, data);
-        msg.packetNo = packetNo++;
-        msg.totalPackets = totalPackets;
-        msg.datasize = strlen(msg.data);
-        send(socket, &msg, sizeof(Message), 0);
-        memset(&msg, 0, sizeof(Message));
+        buffer[bytes_read] = '\0';
+        send(socket, buffer, sizeof(buffer), 0);
+        memset(buffer, 0, sizeof(buffer));
     }
     fclose(file);
 
-    snprintf(msg.data, BUFFER_SIZE, GREEN "\nFile read successfully\n" RESET);
-    msg.datasize = strlen(msg.data);
-    msg.packetNo = totalPackets;
-    msg.totalPackets = totalPackets;
-    printf("%s", msg.data);
-    send(socket, &msg, sizeof(Message), 0);
-    memset(&msg, 0, sizeof(Message));
+    snprintf(buffer, BUFFER_SIZE, "STOP");
+    send(socket, buffer, sizeof(buffer), 0);
+    memset(&msg, 0, sizeof(buffer));
 
     return NULL;
 }
@@ -130,8 +123,6 @@ void *write_file(char *path, int mode, int socket, char *content)
 
     return NULL;
 }
-
-
 
 void *get_data(char *path, int socket)
 {

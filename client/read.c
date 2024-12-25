@@ -3,7 +3,6 @@
 int processReadResponse(Message *response)
 {
     int fileNo;
-    char swtch;
 
     char mainIP[16];
     int mainPort;
@@ -17,25 +16,13 @@ int processReadResponse(Message *response)
     Message request1;
     Message request2;
     Message request3;
-    
-    // sscanf(response->data, "%c", &swtch);
-    // if (swtch == '1') // only main server
-    // {
-    // }
-    // else if (swtch == '2') // backup servers also present
-    // {
-    //     sscanf(response->data, "2%s %d %d %s %d %d %s %d %d",
-    //            mainIP, &mainPort, &fileNo,
-    //            backupIP1, &backupPort1, &fileNo,
-    //            backupIP2, &backupPort2, &fileNo);
-    // }
-    // else 
-    if (swtch == '3') // error handling
+
+    if (response->data[0] == '3')
     {
         printf("Response from the server: %s\n", response->data + 1);
         return -1;
     }
-    
+
     sscanf(response->data, "%s %d %d", mainIP, &mainPort, &fileNo);
 
     sscanf(response->data, "%s %d %d", mainIP, &mainPort, &fileNo);
@@ -59,10 +46,32 @@ int processReadResponse(Message *response)
     // Message response2;
     // Message response3;
 
-    exchange_messages(mainIP, mainPort, &request1, &response1);
-    // if(swtch == '1') return 0;
-    // exchange_messages(backupIP1, backupPort1, &request2, &response2);
-    // exchange_messages(backupIP2, backupPort2, &request3, &response3);
+    int sock = connect_to_server(mainIP, mainPort);
+    bool success = false;
+    if (send(sock, &request1, sizeof(Message), MSG_NOSIGNAL) < 0)
+    {
+        // printf("Send failed", false);
+        printf("Send Failed.\n");
+    }
 
+    if (recv(sock, response, sizeof(Message), 0) < 0)
+    {
+        printf("Recieve Failed.\n");
+    }
+    printf("%s\n", response->data);
+
+    char buffer[DATA_SIZE];
+    recv(sock, buffer, sizeof(buffer), 0);
+    while (strcmp(buffer, "STOP") != 0)
+    {
+        printf("%s", buffer);
+        if (recv(sock, buffer, sizeof(buffer), 0) < 0)
+        {
+            printf("Recieve Failed.\n");
+        }
+    }
+
+    printf("\n\nThe Data is done.\n");
+    close(sock);
     return 0;
 }

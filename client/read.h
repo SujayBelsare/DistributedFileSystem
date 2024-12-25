@@ -15,6 +15,6 @@
 #include "client.h"
 
 int processReadResponse(Message *response);
-extern bool exchange_messages(const char *ip, int port, Message *request, Message *response);
+extern int connect_to_server(const char *ip, int port);
 
 #endif
