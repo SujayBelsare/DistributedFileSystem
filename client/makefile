@@ -1,5 +1,5 @@
 main:
-	gcc -o client ./*.c -lpthread
+	gcc -o client ./source/*.c -lpthread
 
 clean:
 	rm -f client

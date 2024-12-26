@@ -1,4 +1,4 @@
-#include "upload.h"
+#include "../headers/clientheader.h"
 
 // order of uploading is: UPLOAD <filename> DATA <data>
 void* upload_file(char* file, int socket){
