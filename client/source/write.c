@@ -1,63 +1,91 @@
 #include "../headers/clientheader.h"
 
-int processWriteResponse(Message *response, char *content, int write_kind)
+#include "../headers/clientheader.h"
+
+int processWriteResponse(Message *response)
 {
     int fileNo;
-    char swtch;
+
     char mainIP[16];
     int mainPort;
 
-    char backupIP1[16];
-    int backupPort1;
+    // char backupIP1[16];
+    // int backupPort1;
 
-    char backupIP2[16];
-    int backupPort2;
+    // char backupIP2[16];
+    // int backupPort2;
 
-    char *data[2048];
-
-    sscanf(response->data, "%c", &swtch);
-    if (swtch == '1')
-    {
-        sscanf(response->data, "1%s %d %d", mainIP, &mainPort, &fileNo);
-    }
-    else
-    {
-        sscanf(response->data, "2%s %d %d %s %d %d %s %d %d",
-               mainIP, &mainPort, &fileNo,
-               backupIP1, &backupPort1, &fileNo,
-               backupIP2, &backupPort2, &fileNo);
-    }
     Message request1;
     Message request2;
     Message request3;
 
-    request1.datasize = snprintf(request1.data, DATA_SIZE, "WRITE %d %d %s", fileNo, write_kind, content);
-    request2.datasize = snprintf(request2.data, DATA_SIZE, "WRITE %d %d %s", fileNo, write_kind, content);
-    request3.datasize = snprintf(request3.data, DATA_SIZE, "WRITE %d %d %s", fileNo, write_kind, content);
+    if (response->data[0] == '3')
+    {
+        printf("Response from the server: %s\n", response->data + 1);
+        return 0;
+    }
+
+    sscanf(response->data, "%s %d %d", mainIP, &mainPort, &fileNo);
+
+    request1.datasize = snprintf(request1.data, DATA_SIZE, "WRITE %d", fileNo);
+    // request2.datasize = snprintf(request2.data, DATA_SIZE, "READ %d", fileNo);
+    // request3.datasize = snprintf(request3.data, DATA_SIZE, "READ %d", fileNo);
 
     request1.packetNo = 1;
     request1.totalPackets = 1;
     request1.sender = 'C';
 
-    request2.packetNo = 1;
-    request2.totalPackets = 1;
-    request2.sender = 'C';
+    // request2.packetNo = 1;
+    // request2.totalPackets = 1;
+    // request2.sender = 'C';
 
-    request3.packetNo = 1;
-    request3.totalPackets = 1;
-    request3.sender = 'C';
+    // request3.packetNo = 1;
+    // request3.totalPackets = 1;
+    // request3.sender = 'C';
 
     Message response1;
-    Message response2;
-    Message response3;
+    // Message response2;
+    // Message response3;
 
-    exchange_messages(mainIP, mainPort, &request1, &response1);
-    if (swtch == '1')
+    int sock = connect_to_server(mainIP, mainPort);
+    bool success = false;
+    if (send(sock, &request1, sizeof(Message), MSG_NOSIGNAL) < 0)
     {
-        return 0;
+        // printf("Send failed", false);
+        printf("Send Failed.\n");
     }
-    exchange_messages(backupIP1, backupPort1, &request2, &response2);
-    exchange_messages(backupIP2, backupPort2, &request3, &response3);
+
+    if (recv(sock, response, sizeof(Message), 0) < 0)
+    {
+        printf("Recieve Failed.\n");
+    }
+    printf("%s\n", response->data);
+
+    size_t bytes_read;
+    char buffer[2048] = {0};
+    while (fgets(buffer, sizeof(buffer), stdin))
+    {
+        printf("Data: %s\n", buffer);
+        if (send(sock, buffer, sizeof(buffer), 0) == -1)
+        {
+            perror("send failed");
+            break;
+        }
+        if (buffer[strlen(buffer) - 1] != '\n')
+        {
+            continue;
+        }
+        if (strcmp(buffer, "STOP\n") == 0)
+        {
+            break;
+        }
+        memset(buffer, 0, sizeof(buffer));
+    }
+
+    printf("\n\nThe is written successfully.\n");
+
+    close(sock);
+    return 0;
 }
 
 void *check_write_status(void *arg)

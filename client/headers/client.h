@@ -10,7 +10,8 @@ typedef enum
     CMD_READ,
     CMD_DELETE,
     CMD_COPY,
-    CMD_WRITE_STATUS,
+    CMD_WRITE,
+    CMD_UPLOAD,
     CMD_DETAILS,
     CMD_LIST,
     CMD_UNKNOWN

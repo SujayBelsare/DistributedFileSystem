@@ -17,6 +17,6 @@ typedef struct
 static WriteStatus current_write = {0};
 static pthread_mutex_t write_status_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int processWriteResponse(Message *response, char *content, int write_content);
+int processWriteResponse(Message *response);
 
 #endif

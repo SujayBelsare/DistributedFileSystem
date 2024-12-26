@@ -28,10 +28,7 @@ char *inputParser(char *input, int socket)
             }
             else if (!strcmp(command, "WRITE"))
             {
-                // WRITE LOCATION MODE CONTENT
-                int mode = atoi(strtok_r(NULL, " ", &savePtr));
-                char *content = strtok_r(NULL, "\0", &savePtr);
-                write_file(path, mode, socket, content);
+                write_file(path, socket);
             }
             else if (!strcmp(command, "STREAM"))
             {

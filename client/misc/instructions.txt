@@ -18,9 +18,10 @@ syntax:
 - TREE DIR <PATH>
 
 
--- WRITE (valid only for files)
+-- WRITE (only appends to the file. can delete and recreate the file if overwrite is neccessary)
 syntax:
-- WRITE FILE <PATH> <DATA> <MODES>
+- WRITE <PATH>
+
 
 
 -- COPY

@@ -392,6 +392,54 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
 
         send(client_socket, &response, sizeof(Message), 0);
     }
+    else if (strcmp(tok1, "WRITE") == 0)
+    {
+        if (tok2 == NULL)
+        {
+            printf("Invalid WRITE command: Path missing\n");
+            log_system_event("Error", "Invalid WRITE command: Path missing");
+            Message response;
+            response.sender = 'N';
+            response.packetNo = 1;
+            response.totalPackets = 1;
+            snprintf(response.data, sizeof(response.data), "3Invalid WRITE Command: Path missing.");
+            response.datasize = strlen(response.data);
+            send(client_socket, &response, sizeof(Message), 0);
+            return;
+        }
+
+        // Check if the path exists in the Trie
+        Node *node = navigatePath(root, tok2);
+        if (node == NULL || node->metadata->isFile == 0)
+        {
+            printf("File not found or is not a valid file: %s\n", tok2);
+            log_system_event("Error", "File not found or is not a valid file");
+            Message response;
+            response.sender = 'N';
+            response.packetNo = 1;
+            response.totalPackets = 1;
+            snprintf(response.data, sizeof(response.data), "3ERROR: File not found or invalid");
+            response.datasize = strlen(response.data);
+            send(client_socket, &response, sizeof(Message), 0);
+            return;
+        }
+
+        // Fetch the main Storage Server handling the file
+        pthread_mutex_lock(&shared_data_mutex);
+        Connection *main = fileArray[node->metadata->number].main;
+        pthread_mutex_unlock(&shared_data_mutex);
+
+        // Send the Storage Server IP and Port to the client
+        Message response;
+        char *main_ip = inet_ntoa(main->address.sin_addr);
+        int main_port = ntohs(main->address.sin_port);
+        response.sender = 'N';
+        response.packetNo = 1;
+        response.totalPackets = 1;
+        snprintf(response.data, sizeof(response.data), "%s %d %d", main_ip, main_port, node->metadata->number);
+        response.datasize = strlen(response.data);
+        send(client_socket, &response, sizeof(Message), 0);
+    }
     else if (strcmp(tok1, "STREAM") == 0)
     {
         /**
@@ -581,84 +629,6 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
             response.datasize = strlen(response.data);
 
             send(client_socket, &response, sizeof(Message), 0);
-        }
-    }
-    else if (strcmp(tok1, "WRITE") == 0)
-    {
-        if (strcmp(tok2, "FILE") == 0)
-        {
-
-            char *path = __strtok_r(NULL, " \n", &token);
-            Node *node = getNodeFromPath(root, path);
-
-            if (node == NULL)
-            {
-                printf("Invalid path\n");
-                log_system_event("Error", "Invalid path");
-                return;
-            }
-            char *name = __strtok_r(NULL, " \n", &token);
-
-            if (name == NULL)
-            {
-                printf("Invalid name\n");
-                log_system_event("Error", "Invalid name");
-                return;
-            }
-            Node *child = navigateTo(node, name);
-            if (child->metadata->isFile == 1)
-            {
-                pthread_mutex_lock(&shared_data_mutex);
-                Connection *main = fileArray[child->metadata->number].main;
-                Connection *backup1 = fileArray[child->metadata->number].backup1;
-                Connection *backup2 = fileArray[child->metadata->number].backup2;
-                char *main_ip = "No server is defined\n";
-                int main_port = 0;
-                if (main == NULL && backup1 == NULL && backup2 == NULL)
-                {
-                    printf("No server defined.\n");
-                    log_system_event("Error", "No server defined");
-                    return;
-                }
-                else if (main != NULL)
-                {
-                    main->filecount++;
-                    fileArray[child->metadata->number].main = main;
-
-                    main_ip = inet_ntoa(main->address.sin_addr);
-                    main_port = ntohs(main->address.sin_port);
-                }
-                if (backup1 != NULL && backup2 != NULL)
-                {
-                    backup1->filecount++;
-                    backup2->filecount++;
-
-                    fileArray[child->metadata->number].backup1 = backup1;
-                    fileArray[child->metadata->number].backup2 = backup2;
-                }
-                pthread_mutex_unlock(&shared_data_mutex);
-                // char *content = __strtok_r(NULL, " \n", &token);
-                Message response;
-                response.sender = 'N';
-                response.packetNo = 1;
-                response.totalPackets = 1;
-                if (backup1 == NULL || backup2 == NULL)
-                {
-                    // send only main server IP and port
-                    snprintf(response.data, sizeof(response.data), "1%s %d %d", main_ip, main_port, child->metadata->number);
-                    log_server_response(log_file, inet_ntoa(address->sin_addr), inet_ntoa(main->address.sin_addr), "WRITE", "SUCCESS");
-                }
-                else
-                {
-                    snprintf(response.data, sizeof(response.data), "2%s %d %d %s %d %d %s %d %d",
-                             main_ip, main_port, child->metadata->number,
-                             inet_ntoa(backup1->address.sin_addr), ntohs(backup1->address.sin_port), child->metadata->number,
-                             inet_ntoa(backup2->address.sin_addr), ntohs(backup2->address.sin_port), child->metadata->number);
-                    log_server_response(log_file, inet_ntoa(address->sin_addr), inet_ntoa(main->address.sin_addr), "WRITE", "SUCCESS");
-                }
-                response.datasize = strlen(response.data);
-                send(client_socket, &response, sizeof(Message), 0);
-            }
         }
     }
     else if (strcmp(tok1, "DETAILS") == 0)

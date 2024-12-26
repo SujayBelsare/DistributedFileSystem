@@ -2,10 +2,10 @@
 
 void handle_error(const char *message, bool fatal)
 {
-    fprintf(stderr, "Error: %s - %s\n", message, strerror(errno));
+    fprintf(stderr, RED "Error: %s\n" RESET, message);
     if (fatal)
     {
-        exit(1);
+        printf(RED "Fatal error detected. Performance may be compromised.\n" RESET);
     }
 }
 
@@ -79,7 +79,8 @@ CommandType parse_command(const char *command)
         {"READ", CMD_READ},
         {"DELETE", CMD_DELETE},
         {"COPY", CMD_COPY},
-        {"WRITE", CMD_WRITE_STATUS},
+        {"WRITE", CMD_WRITE},
+        {"UPLOAD", CMD_UPLOAD},
         {"DETAILS", CMD_DETAILS},
         {"LIST", CMD_LIST},
 

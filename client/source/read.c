@@ -20,12 +20,11 @@ int processReadResponse(Message *response)
     if (response->data[0] == '3')
     {
         printf("Response from the server: %s\n", response->data + 1);
-        return -1;
+        return 0;
     }
 
     sscanf(response->data, "%s %d %d", mainIP, &mainPort, &fileNo);
 
-    sscanf(response->data, "%s %d %d", mainIP, &mainPort, &fileNo);
     request1.datasize = snprintf(request1.data, DATA_SIZE, "READ %d", fileNo);
     // request2.datasize = snprintf(request2.data, DATA_SIZE, "READ %d", fileNo);
     // request3.datasize = snprintf(request3.data, DATA_SIZE, "READ %d", fileNo);

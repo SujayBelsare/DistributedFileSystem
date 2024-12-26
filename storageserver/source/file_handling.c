@@ -20,6 +20,7 @@ void *read_file(char *path, int socket)
         perror(RED "stat" RESET);
         send(socket, &msg, sizeof(Message), 0);
         memset(&msg, 0, sizeof(Message));
+        close(socket);
         return NULL;
     }
 
@@ -32,6 +33,7 @@ void *read_file(char *path, int socket)
         printf("%s", msg.data);
         send(socket, &msg, sizeof(Message), 0);
         memset(&msg, 0, sizeof(Message));
+        close(socket);
         return NULL;
     }
 
@@ -45,6 +47,7 @@ void *read_file(char *path, int socket)
         perror(RED "fopen" RESET);
         send(socket, &msg, sizeof(Message), 0);
         memset(&msg, 0, sizeof(Message));
+        close(socket);
         return NULL;
     }
 
@@ -66,60 +69,87 @@ void *read_file(char *path, int socket)
 
     snprintf(buffer, BUFFER_SIZE, "STOP");
     send(socket, buffer, sizeof(buffer), 0);
-    memset(&msg, 0, sizeof(buffer));
+    memset(buffer, 0, sizeof(buffer));
 
+    close(socket);
     return NULL;
 }
 
-void *write_file(char *path, int mode, int socket, char *content)
+void *write_file(char *path, int socket)
 {
-    Message msg_send;
-    memset(&msg_send, 0, sizeof(Message));
-    msg_send.sender = 'S';
-    msg_send.packetNo = 1;
-    msg_send.totalPackets = 1;
+    Message msg;
+    memset(&msg, 0, sizeof(Message));
+    msg.sender = 'S';
+    msg.packetNo = 1;
+    msg.totalPackets = 1;
 
-    FILE *file = fopen(path, mode == 0 ? "wb" : "ab");
-    if (!file)
+    path[strcspn(path, "\n")] = '\0';
+    struct stat statbuf;
+
+    printf("Path: %s\n", path);
+    if (stat(path, &statbuf) == -1)
     {
-        perror(RED "fopen" RESET);
-        snprintf(msg_send.data, BUFFER_SIZE, RED "Error: fopen failed\n" RESET);
-        msg_send.datasize = strlen(msg_send.data);
-        msg_send.packetNo = 1;
-        msg_send.totalPackets = 1;
-        send(socket, &msg_send, sizeof(Message), 0);
-        memset(&msg_send, 0, sizeof(Message));
+        snprintf(msg.data, BUFFER_SIZE, RED "Error: stat failed\n" RESET);
+        msg.datasize = strlen(msg.data);
+        msg.packetNo = 1;
+        msg.totalPackets = 1;
+        perror(RED "stat" RESET);
+        send(socket, &msg, sizeof(Message), 0);
+        memset(&msg, 0, sizeof(Message));
+        close(socket);
         return NULL;
     }
 
-    int content_length = strlen(content);
-    // int total_packets = (content_length + 256 - 1) / 256;
-    // int packetNo = 1;
-
-    for (int i = 0; i < content_length; i += 256)
+    if (!S_ISREG(statbuf.st_mode))
     {
-        int chunk_size = content_length - i < 256 ? content_length - i : 256;
-        strncpy(msg_send.data, content + i, 256);
-        if (fwrite(msg_send.data, 1, msg_send.datasize, file) != msg_send.datasize)
-        {
-            perror(RED "fwrite" RESET);
-            snprintf(msg_send.data, BUFFER_SIZE, RED "Error: fwrite failed\n" RESET);
-            msg_send.datasize = strlen(msg_send.data);
-            send(socket, &msg_send, sizeof(Message), 0);
-            memset(&msg_send, 0, sizeof(Message));
-            fclose(file);
-            return NULL;
-        }
-        memset(&msg_send, 0, sizeof(Message));
+        snprintf(msg.data, BUFFER_SIZE, RED "The path provided does not exist\n" RESET);
+        msg.datasize = strlen(msg.data);
+        msg.packetNo = 1;
+        msg.totalPackets = 1;
+        printf("%s", msg.data);
+        send(socket, &msg, sizeof(Message), 0);
+        memset(&msg, 0, sizeof(Message));
+        close(socket);
+        return NULL;
     }
 
-    snprintf(msg_send.data, BUFFER_SIZE, GREEN "String written to file successfully\n" RESET);
-    msg_send.datasize = strlen(msg_send.data);
-    msg_send.packetNo = 1;
-    msg_send.totalPackets = 1;
-    printf("%s", msg_send.data);
-    send(socket, &msg_send, sizeof(Message), 0);
-    fclose(file);
+    FILE *file = fopen(path, "a");
+    if (!file)
+    {
+        snprintf(msg.data, BUFFER_SIZE, RED "Error: fopen failed\n" RESET);
+        msg.datasize = strlen(msg.data);
+        msg.packetNo = 1;
+        msg.totalPackets = 1;
+        perror(RED "fopen" RESET);
+        send(socket, &msg, sizeof(Message), 0);
+        memset(&msg, 0, sizeof(Message));
+        close(socket);
+        return NULL;
+    }
+
+    snprintf(msg.data, BUFFER_SIZE, GREEN "INPUT THE CONTENT:\n" RESET);
+    msg.datasize = strlen(msg.data);
+    msg.packetNo = 1;
+    msg.totalPackets = 1;
+    send(socket, &msg, sizeof(Message), 0);
+
+    char buffer[2048];
+    recv(socket, buffer, sizeof(buffer), 0);
+    while (strcmp(buffer, "STOP\n") != 0)
+    {
+        // write buffer to file
+        fprintf(file, "%s", buffer);
+        printf("Data: %s\n", buffer);
+        fflush(file);
+        memset(buffer, 0, sizeof(buffer));
+        if (recv(socket, buffer, sizeof(buffer), 0) < 0)
+        {
+            printf("Recieve Failed.\n");
+        }
+    }
+
+    printf("\n\nThe Data is done.\n");
+    close(socket);
 
     return NULL;
 }
