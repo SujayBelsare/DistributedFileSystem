@@ -718,5 +718,28 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
             printf("DEBUG-DETAILS-5\n");
         }
     }
+    else if (strcmp(tok1, "LIST") == 0)
+    {
+        Message response;
+        response.sender = 'N';
+        response.packetNo = 1;
+        response.totalPackets = 1;
+        memset(response.data, 0, sizeof(response.data));
+        printTree(root, 10, response.data);
+        response.datasize = strlen(response.data);
+        send(client_socket, &response, sizeof(Message), 0);
+    }
+    else
+    {
+        printf("Invalid command\n");
+        log_system_event("Error", "Invalid command");
+        Message response;
+        response.sender = 'N';
+        response.packetNo = 1;
+        response.totalPackets = 1;
+        strcpy(response.data, "INVALID COMMAND.\n");
+        response.datasize = strlen(response.data);
+        send(client_socket, &response, sizeof(Message), 0);
+    }
     printTree(root, 10, NULL);
 }
