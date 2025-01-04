@@ -55,7 +55,7 @@ void process_nm_request(char *data, size_t size, char sender, struct sockaddr_in
 				snprintf(msg_send.data, BUFFER_SIZE, "Incorrect command provided. Please try again.\n");
 				msg_send.datasize = strlen(msg_send.data);
 				printf("%s", msg_send.data);
-				send(socket, &msg_send, sizeof(Message), 0);
+				send(client_socket, &msg_send, sizeof(Message), 0);
 				memset(&msg_send, 0, sizeof(Message));
 			}
 		}
@@ -63,7 +63,7 @@ void process_nm_request(char *data, size_t size, char sender, struct sockaddr_in
 		{
 			snprintf(msg_send.data, BUFFER_SIZE, "Please provide the path to the file\n" RESET);
 			msg_send.datasize = strlen(msg_send.data);
-			send(socket, &msg_send, sizeof(Message), 0);
+			send(client_socket, &msg_send, sizeof(Message), 0);
 			memset(&msg_send, 0, sizeof(Message));
 		}
 	}
@@ -71,7 +71,7 @@ void process_nm_request(char *data, size_t size, char sender, struct sockaddr_in
 	{
 		snprintf(msg_send.data, BUFFER_SIZE, "No command provided.\n" RESET);
 		msg_send.datasize = strlen(msg_send.data);
-		send(socket, &msg_send, sizeof(Message), 0);
+		send(client_socket, &msg_send, sizeof(Message), 0);
 		memset(&msg_send, 0, sizeof(Message));
 	}
 
