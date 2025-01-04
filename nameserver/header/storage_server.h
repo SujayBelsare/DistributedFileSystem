@@ -4,7 +4,6 @@
 #include "../protocols/message.h"
 #include "main.h"
 
-void process_server_request(char *data, size_t size, char sender, struct sockaddr_in *address, int client_socket);
-void handle_server(int client_socket, Message *initial_message);
+void process_server_request(char *data, size_t size, char sender, struct sockaddr_in *address, int client_socket, int flag);
 
 #endif

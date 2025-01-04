@@ -1,5 +1,5 @@
 main:
-	gcc main.c ./source/*.c ./protocols/*.c -g -o nameserver
+	gcc ./source/*.c ./protocols/*.c -g -o nameserver
 
 clean:
 	rm -f nameserver
