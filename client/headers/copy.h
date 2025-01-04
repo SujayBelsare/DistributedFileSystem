@@ -3,7 +3,6 @@
 
 #include "clientheader.h"
 
-int processCopyResponse(Message *initial_respose, char *nmip, int nmport);
-int processListResponse(Message *response);
+int processCopyResponse(Message *response, int client_socket);
 
 #endif

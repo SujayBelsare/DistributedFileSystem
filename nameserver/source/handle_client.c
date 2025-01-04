@@ -99,7 +99,7 @@ void handle_client(int client_socket, Message *initial_message)
         {
 
             // Process the complete request
-            process_client_request(requestBuffer->data, requestBuffer->size, message.sender, &address, client_socket);
+            process_client_request(requestBuffer->data, requestBuffer->size, message.sender, &address, client_socket, 1);
 
             // Reset the buffer for the next request
             reset_request_buffer(requestBuffer);
@@ -136,7 +136,7 @@ void handle_client(int client_socket, Message *initial_message)
     free(requestBuffer);
 }
 
-void process_client_request(char *data, size_t size, char sender, struct sockaddr_in *address, int client_socket)
+void process_client_request(char *data, size_t size, char sender, struct sockaddr_in *address, int client_socket, int flag)
 {
     char *token;
     char *tok1 = __strtok_r(data, " \n", &token);
@@ -295,7 +295,7 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
             response.sender = 'N';
             response.packetNo = 1;
             response.totalPackets = 1;
-            snprintf(response.data, sizeof(response.data), "FILE CREATED SUCCESSFULLY.");
+            snprintf(response.data, sizeof(response.data), "%s FILE CREATED SUCCESSFULLY.\n", name);
             log_system_event("Info", "File created successfully");
             response.datasize = strlen(response.data);
             send(client_socket, &response, sizeof(Message), 0);
@@ -729,6 +729,72 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
         response.datasize = strlen(response.data);
         send(client_socket, &response, sizeof(Message), 0);
     }
+    // command format:
+    // COPY FILE <source_path> <destination_path>
+    // or
+    // COPY DIR <source_path> <destination_path>
+    else if (strcmp(tok1, "COPY") == 0)
+    {
+        Message response;
+        response.sender = 'N';
+        response.packetNo = 1;
+        response.totalPackets = 1;
+        if (strcmp(tok2, "FILE") == 0)
+        {
+            char *source_path = __strtok_r(NULL, " \n", &token);
+            char *dest_path = __strtok_r(NULL, " \n", &token);
+
+            if (source_path == NULL || dest_path == NULL)
+            {
+                strcpy(response.data, "THE PATHS ARE MISSING FOR THE COPY COMMAND.\n");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
+                goto everything_is_done;
+            }
+
+            Node *sourceNode = getNodeFromPath(root, source_path);
+            Node *destNode = getNodeFromPath(root, dest_path);
+
+            if (sourceNode == NULL || destNode == NULL || sourceNode->metadata->isFile == 0 || sourceNode->metadata->isDeleted == 1 || destNode->metadata->isFile == 1)
+            {
+                strcpy(response.data, "THE PATH(S) PROVIDED ARE INVALID.\n");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
+                goto everything_is_done;
+            }
+            if (destNode->metadata->isDeleted == 1)
+            {
+                strcpy(response.data, "THE DESTINATION FILE IS DELETED.\n");
+                response.datasize = strlen(response.data);
+                send(client_socket, &response, sizeof(Message), 0);
+                goto everything_is_done;
+            }
+            strcpy(response.data, "THE COPY PROCESS IS STARTING...\n");
+            response.datasize = strlen(response.data);
+            send(client_socket, &response, sizeof(Message), 0);
+
+            char newCommand[2048] = {0};
+            snprintf(newCommand, sizeof(newCommand), "CREATE FILE %s %s", dest_path, sourceNode->name);
+            process_client_request(newCommand, strlen(newCommand), 'N', address, client_socket, 0);
+            // now that the file is created in the destination, we can copy the contents
+            strcat(dest_path, "/");
+            strcat(dest_path, sourceNode->name);
+
+            destNode = getNodeFromPath(root, dest_path);
+            copycontents(sourceNode, destNode);
+
+            goto everything_is_done;
+        }
+
+    everything_is_done:
+        if (flag)
+        {
+            strcpy(response.data, "STOP");
+            response.datasize = strlen(response.data);
+            send(client_socket, &response, sizeof(Message), 0);
+        }
+        return;
+    }
     else
     {
         printf("Invalid command\n");
@@ -742,4 +808,5 @@ void process_client_request(char *data, size_t size, char sender, struct sockadd
         send(client_socket, &response, sizeof(Message), 0);
     }
     printTree(root, 10, NULL);
+    return;
 }

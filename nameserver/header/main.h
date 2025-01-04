@@ -22,6 +22,7 @@
 #include "pathres.h"
 #include "bookkeeping.h"
 #include "delete.h"
+#include "copycontents.h"
 
 #define SO_REUSEPORT 15
 

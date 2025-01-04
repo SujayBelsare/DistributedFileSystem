@@ -45,7 +45,8 @@ int main(void)
         request.data[DATA_SIZE - 1] = '\0';
 
         Message response;
-        if (!exchange_messages(nm_ip, nm_port, &request, &response))
+        int NMsocket = exchange_messages(nm_ip, nm_port, &request, &response);
+        if (!NMsocket)
         {
             handle_error("Failed to communicate with Naming Server", true);
         }
@@ -77,7 +78,8 @@ int main(void)
             break;
 
         case CMD_COPY:
-            // int processCopyResponse(Message *initial_respose, char *nmip, int nmport)
+            processCopyResponse(&response, NMsocket);
+            break;
 
         case CMD_STREAM:
             if (!(sscanf(response.data, "%s %d", storage_server.ip, &storage_server.port) == 2))
@@ -91,6 +93,7 @@ int main(void)
         default:
             handle_error("Unsupported command", true);
         }
+        close(NMsocket);
     }
     pthread_mutex_destroy(&write_status_mutex);
     return 0;

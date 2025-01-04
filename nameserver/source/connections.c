@@ -81,7 +81,7 @@ char* exchangeMessage(const char *ip, int port, Message *request)
     if (send(sock, request, sizeof(Message), MSG_NOSIGNAL) < 0)
     {
         close(sock);
-        return 0;
+        return NULL;
     }
     success = 1;
     printf("DEBUG-1\n");

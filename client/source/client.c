@@ -45,26 +45,24 @@ int connect_to_server(const char *ip, int port)
 }
 
 // Generic function to send/receive messages
-bool exchange_messages(const char *ip, int port, Message *request, Message *response)
+int exchange_messages(const char *ip, int port, Message *request, Message *response)
 {
     int sock = connect_to_server(ip, port);
-    bool success = false;
     if (send(sock, request, sizeof(Message), MSG_NOSIGNAL) < 0)
     {
         handle_error("Send failed", false);
-        goto cleanup;
+        close(sock);
+        return false;
     }
 
     if (recv(sock, response, sizeof(Message), 0) < 0)
     {
         handle_error("Receive failed", false);
-        goto cleanup;
+        close(sock);
+        return false;
     }
-    success = true;
 
-cleanup:
-    close(sock);
-    return success;
+    return sock;
 }
 
 CommandType parse_command(const char *command)

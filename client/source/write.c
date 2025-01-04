@@ -111,8 +111,10 @@ void *check_write_status(void *arg)
         pthread_mutex_unlock(&write_status_mutex);
 
         Message response;
-        if (exchange_messages(nm_info->ip, nm_info->port, &request, &response))
+        int temp = exchange_messages(nm_info->ip, nm_info->port, &request, &response);
+        if (temp)
         {
+            close(temp);
             pthread_mutex_lock(&write_status_mutex);
             if (strncmp(response.data, "WRITE_FAILED", 11) == 0)
             {

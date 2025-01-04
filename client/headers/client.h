@@ -21,7 +21,7 @@ void handle_error(const char *message, bool fatal);
 
 int connect_to_server(const char *ip, int port);
 
-bool exchange_messages(const char *ip, int port, Message *request, Message *response);
+int exchange_messages(const char *ip, int port, Message *request, Message *response);
 
 CommandType parse_command(const char *command);
 

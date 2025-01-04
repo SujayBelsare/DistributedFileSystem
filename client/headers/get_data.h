@@ -3,6 +3,8 @@
 
 #include "clientheader.h"
 
-int processGetResponse(Message* response);
+int processGetResponse(Message *response);
+
+int processListResponse(Message *response);
 
 #endif

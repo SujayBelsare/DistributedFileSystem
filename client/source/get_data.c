@@ -56,10 +56,18 @@ int processGetResponse(Message *response)
     Message response2;
     Message response3;
 
-    exchange_messages(mainIP, mainPort, &request1, &response1);
+    close(exchange_messages(mainIP, mainPort, &request1, &response1));
     printf("%s\n", response1.data);
     if (swtch == '1')
         return 0;
-    exchange_messages(backupIP1, backupPort1, &request2, &response2);
+    close(exchange_messages(backupIP1, backupPort1, &request2, &response2));
+}
 
+int processListResponse(Message *response)
+{
+    // just print response data if it's not null
+    if (response->data != NULL)
+    {
+        printf("%s\n", response->data);
+    }
 }
