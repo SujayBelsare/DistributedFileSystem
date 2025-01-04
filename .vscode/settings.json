@@ -1,0 +1,18 @@
+{
+    "files.associations": {
+        "*.cpp": "cpp",
+        "header.h": "c",
+        "socket.h": "c",
+        "stdio.h": "c",
+        "types.h": "c",
+        "stdlib.h": "c",
+        "in.h": "c",
+        "create_delete.h": "c",
+        "request_handler.h": "c",
+        "message.h": "c",
+        "get_read_write.h": "c",
+        "handle_nm.h": "c",
+        "handle_client.h": "c",
+        "stream.h": "c"
+    }
+}

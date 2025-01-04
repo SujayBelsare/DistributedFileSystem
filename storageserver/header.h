@@ -46,21 +46,14 @@
 #define BUFFER_SIZE 2048
 #define DATA_SIZE 2048
 
-#include "headers/parser.h"
-#include "headers/file_handling.h"
-#include "headers/handling.h"
-#include "headers/nameserver.h"
+#define SO_REUSEPORT 15
+
+#include "headers/message.h"
+#include "headers/request_handler.h"
+#include "headers/get_read_write.h"
+#include "headers/create_delete.h"
 #include "headers/handle_nm.h"
 #include "headers/handle_client.h"
 #include "headers/stream.h"
-
-// typedef struct Message
-// {
-//     char sender;      // who is sending. S : Storage Server. N : Name Server. C : Client
-//     int packetNo;     // the current packet number of the data
-//     int totalPackets; // the total number of packets the sender is expected to send.
-//     int datasize;     // the number of bytes of data the sender is sending (in the data field)
-//     char data[2048];  // actual data
-// } Message;
 
 #endif

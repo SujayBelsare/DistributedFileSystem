@@ -3,8 +3,6 @@
 
 #include "../header.h"
 
-
-void handle_client(int nm_socket, Message* initial_message);
-
+void process_client_request(char *data, size_t size, char sender, struct sockaddr_in *address, int client_socket);
 
 #endif

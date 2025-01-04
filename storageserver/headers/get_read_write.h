@@ -1,5 +1,5 @@
-#ifndef _FILE_HANDLING_H_
-#define _FILE_HANDLING_H_
+#ifndef GET_READ_WRITE_H
+#define GET_READ_WRITE_H
 
 #include "../header.h"
 

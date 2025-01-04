@@ -1,44 +1,4 @@
-// Handles all comms with the nameserver
 #include "../header.h"
-
-// extern void handle_client(int nm_socket, Message* initial_message);
-// extern void handle_nm(int nm_socket, Message* initial_message);
-
-void *nm_sm_handler(void *arg)
-{
-    int nm_socket = *((int *)arg);
-    free(arg);
-
-    // Read initial message
-    Message initial_message;
-    memset(&initial_message, 0, sizeof(Message));
-    ssize_t bytes_read = recv(nm_socket, &initial_message, sizeof(Message), 0);
-    initial_message.data[initial_message.datasize] = 0;
-    if (bytes_read <= 0)
-    {
-        perror("Failed to read initial message");
-        close(nm_socket);
-        return NULL;
-    }
-
-    char sender = initial_message.sender;
-    if (sender == 'C')
-    {
-        handle_client(nm_socket, &initial_message);
-        printf("CLIENT SE AAYA HEIN\n");
-    }
-    else if (sender == 'N')
-    {
-        handle_nm(nm_socket, &initial_message);
-    }
-    else
-    {
-        fprintf(stderr, "Unknown sender type: %c\n", sender);
-    }
-
-    close(nm_socket);
-    return NULL;
-}
 
 int main()
 {
@@ -178,7 +138,7 @@ int main()
 
         // Create a new thread for the client
         pthread_t thread_id;
-        if (pthread_create(&thread_id, NULL, nm_sm_handler, pclient) != 0)
+        if (pthread_create(&thread_id, NULL, request_classifier, pclient) != 0)
         {
             perror("Could not create thread");
             free(pclient);
